@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebScraper {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         final String url = "https://www.bbc.com";
-
+            Data data = scrapeData(url);
+            System.out.println(data.format());
     }
 
     private static Data scrapeData(String url) throws IOException {
@@ -75,12 +76,12 @@ public class WebScraper {
 
             sb.append("Headings:\n");
             for (String heading : headings) {
-                sb.append(" - ").append(heading).append("\n");
+                sb.append(heading).append("\n");
             }
 
             sb.append("\nLinks:\n");
             for (String link : links) {
-                sb.append(" - ").append(link).append("\n");
+                sb.append(link).append("\n");
             }
 
             return sb.toString();
