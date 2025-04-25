@@ -1,6 +1,10 @@
 {
     "java.project.referencedLibraries": [
-        "lib/**/*.jar",
+        "/Users/anukahettiarachchi/Downloads/gson-2.8.5.jar",
+        "/Users/anukahettiarachchi/Downloads/jaxb-api-2.3.1.jar",
         "/Users/anukahettiarachchi/Downloads/jsoup-1.12.1.jar"
+    ],
+    "java.project.sourcePaths": [
+        "."
     ]
 }

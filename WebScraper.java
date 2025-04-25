@@ -1,5 +1,5 @@
- import org.jsoup.Jsoup;
- import org.jsoup.nodes.Document;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebScraper {
+
     public static void main(String[] args) throws IOException {
         final String url = "https://www.bbc.com";
-            Data data = scrapeData(url);
-            System.out.println(data.format());
+        Data data = scrapeData(url);
+        System.out.println(data.format());
     }
 
     private static Data scrapeData(String url) throws IOException {
@@ -20,7 +21,7 @@ public class WebScraper {
         data.setTitle(doc.title());
 
         List<String> headings = new ArrayList<>();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 1; i <= 6; i++) {
             Elements elements = doc.select("h" + i);
             for (Element h : elements) {
                 headings.add("h" + i + ": " + h.text());
@@ -37,14 +38,48 @@ public class WebScraper {
         }
         data.setLinks(anchorLinks);
 
+        List<ArticleData> articles = new ArrayList<>();
+        Elements newsBlocks = doc.select("[data-testid=dundee-card]");
+
+        for (Element block : newsBlocks) {
+            String headline = block.select("[data-testid=card-headline]").text();
+
+            if (!headline.isEmpty()) {
+                String link = block.select("a").attr("href");
+                String fullUrl = link.startsWith("http") ? link : url + link;
+
+                try {
+                    Document articlePage = Jsoup.connect(fullUrl).get();
+
+                    String author = articlePage.select("[data-testid=byline-new-contributors] div div span").text();
+                    if (author.isEmpty()) {
+                        author = "Unknown";
+                    }
+
+                    String date = articlePage.select("[data-testid=byline-new] time").text();
+                    if (date.isEmpty()) {
+                        date = "Unknown";
+                    }
+
+                    ArticleData article = new ArticleData(headline, author, date);
+                    articles.add(article);
+
+                } catch (IOException e) {
+                    System.err.println("Failed to load article page: " + fullUrl);
+                }
+            }
+        }
+
+        data.setArticles(articles);
+
         return data;
     }
 
-    static class Data{
-
+    static class Data {
         private String title;
         private List<String> headings;
         private List<String> links;
+        private List<ArticleData> articles;
 
         public void setTitle(String title) {
             this.title = title;
@@ -58,16 +93,8 @@ public class WebScraper {
             this.links = links;
         }
 
-        public String getTitle() {
-            return title;
-        }
-
-        public List<String> getHeadings() {
-            return headings;
-        }
-
-        public List<String> getLinks() {
-            return links;
+        public void setArticles(List<ArticleData> articles) {
+            this.articles = articles;
         }
 
         public String format() {
@@ -84,9 +111,31 @@ public class WebScraper {
                 sb.append(link).append("\n");
             }
 
+            sb.append("\nNews Articles:\n");
+            for (ArticleData article : articles) {
+                sb.append(article.toString()).append("\n");
+            }
+
             return sb.toString();
         }
-
     }
 
+    static class ArticleData {
+        private final String headline;
+        private final String author;
+        private final String date;
+
+        public ArticleData(String headline, String author, String date) {
+            this.headline = headline;
+            this.author = author;
+            this.date = date;
+        }
+
+        public String toString() {
+            return "--------------------------\n" +
+                   "Headline: " + headline + "\n" +
+                   "Author: " + author + "\n" +
+                   "Date: " + date;
+        }
+    }
 }
